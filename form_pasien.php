@@ -1,48 +1,48 @@
 <?php
-session_start();
-require 'koneksi.php';
+session_start(); // Memulai sesi user
+require 'koneksi.php'; // Koneksi ke database
 
 // Cek jika belum login, redirect ke login.php
 if (empty($_SESSION['email'])) {
-    header('Location: login.php');
+    header('Location: login.php'); // Redirect jika belum login
     exit;
 }
 
-$dokter_id = isset($_GET['dokter_id']) ? (int)$_GET['dokter_id'] : 0;
-$hari = isset($_GET['hari']) ? $_GET['hari'] : '';
-$jam = isset($_GET['jam']) ? $_GET['jam'] : '';
+$dokter_id = isset($_GET['dokter_id']) ? (int)$_GET['dokter_id'] : 0; // Ambil dokter_id dari URL
+$hari = isset($_GET['hari']) ? $_GET['hari'] : ''; // Ambil hari dari URL
+$jam = isset($_GET['jam']) ? $_GET['jam'] : ''; // Ambil jam dari URL
 $nama_dokter = '';
 
 // Ambil nama dokter dari database berdasarkan ID
 if ($dokter_id) {
-    $stmt_dokter = $koneksi->prepare("SELECT nama FROM dokter WHERE id = ?");
-    $stmt_dokter->bind_param("i", $dokter_id);
-    $stmt_dokter->execute();
-    $stmt_dokter->bind_result($nama_dokter);
+    $stmt_dokter = $koneksi->prepare("SELECT nama FROM dokter WHERE id = ?"); // Query nama dokter
+    $stmt_dokter->bind_param("i", $dokter_id); // Bind dokter_id
+    $stmt_dokter->execute(); // Eksekusi query
+    $stmt_dokter->bind_result($nama_dokter); // Ambil hasil ke $nama_dokter
     $stmt_dokter->fetch();
     $stmt_dokter->close();
 }
 
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nik = $_POST['nik'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika form disubmit
+    $nik = $_POST['nik']; // Ambil NIK dari form
 
 
-    $nama_lengkap   = $_POST['nama_lengkap'];
-    $jenis_kelamin  = $_POST['jenis_kelamin'];
-    $tempat_lahir   = $_POST['tempat_lahir'];
-    $tanggal_lahir  = $_POST['tanggal_lahir'];
-    $telepon        = $_POST['telepon'];
-    $email = $_SESSION['email'];
+    $nama_lengkap   = $_POST['nama_lengkap']; // Ambil nama lengkap
+    $jenis_kelamin  = $_POST['jenis_kelamin']; // Ambil jenis kelamin
+    $tempat_lahir   = $_POST['tempat_lahir']; // Ambil tempat lahir
+    $tanggal_lahir  = $_POST['tanggal_lahir']; // Ambil tanggal lahir
+    $telepon        = $_POST['telepon']; // Ambil telepon
+    $email = $_SESSION['email']; // Ambil email dari session
 
-    $dokter_id      = $_POST['dokter_id'];
-    $hari           = $_POST['hari'];
-    $jam            = $_POST['jam'];
+    $dokter_id      = $_POST['dokter_id']; // Ambil dokter_id dari form
+    $hari           = $_POST['hari']; // Ambil hari dari form
+    $jam            = $_POST['jam']; // Ambil jam dari form
 
     // Ambil nama dokter dari ID
     $nama_dokter = '';
     if ($dokter_id) {
-        $stmt_dokter = $koneksi->prepare("SELECT nama FROM dokter WHERE id = ?");
+        $stmt_dokter = $koneksi->prepare("SELECT nama FROM dokter WHERE id = ?"); // Query nama dokter
         $stmt_dokter->bind_param("i", $dokter_id);
         $stmt_dokter->execute();
         $stmt_dokter->bind_result($nama_dokter);
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Pisahkan jam mulai dan jam selesai
-    $jam_parts = explode(' - ', $jam);
+    $jam_parts = explode(' - ', $jam); // Pisahkan jam mulai dan selesai
     $jam_mulai = $jam_parts[0] ?? '';
     $jam_selesai = $jam_parts[1] ?? '';
 
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $stmt->get_result()->fetch_assoc();
     $jumlah_pasien = $result['total'];
 
-    $kuota_maksimal = 10;
+    $kuota_maksimal = 10; // Batas maksimal pasien per jadwal
 
     if ($jumlah_pasien >= $kuota_maksimal) {
         echo "<script>alert('Kuota penuh untuk jadwal ini. Silakan pilih jadwal lain.'); history.back();</script>";
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("ss", $nama_dokter, $hari);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc();
-    $nomor_antrian = ($row['terakhir'] ?? 0) + 1;
+    $nomor_antrian = ($row['terakhir'] ?? 0) + 1; // Nomor antrian berikutnya
 
     // Query INSERT lengkap, pastikan field sesuai tabel pasien
     $stmt = $koneksi->prepare("INSERT INTO pasien (nik, nama_lengkap, jenis_kelamin, tempat_lahir, tanggal_lahir, telepon, email, dokter_id, nama_dokter, hari_janji, jam_mulai, jam_selesai, nomor_antrian) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
