@@ -183,7 +183,7 @@ $result = $stmt->get_result();
         ?>
     </div>
 
-    <!-- Footer -->
+    <!-- Footer ------>
     <footer class="footer">
       <div class="footer-container">
 
